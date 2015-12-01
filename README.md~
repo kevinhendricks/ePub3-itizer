@@ -1,4 +1,4 @@
-**ePub3-itizer** is a python 2.7 and python 3.4 output plugin for Sigil 
+epub3-itizer is a python 2.7 and python 3.4 output plugin for Sigil 
 that will convert a valid epub2 epub into a valid epub3 epub.
 
 Updated: July 9, 2015
