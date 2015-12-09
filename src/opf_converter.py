@@ -47,10 +47,11 @@ _OPF_PARENT_TAGS = ['?xml', 'package', 'metadata', 'dc-metadata', 'x-metadata', 
 
 class Opf_Converter(object):
 
-    def __init__(self, opf2data, spine_properties, manifest_properties):
+    def __init__(self, opf2data, spine_properties, manifest_properties, mo_properties):
         self.opf = opf2data
         self.sprops = spine_properties.copy()
         self.mprops = manifest_properties.copy()
+        self.moprops = mo_properties.copy()
         self.opos = 0
         self.lang = "en"
         self.title_cnt = 0
@@ -156,6 +157,23 @@ class Opf_Converter(object):
             if end_metadata and not "metadata" in prefix:
                 # append the required dcterms modified information and close off metadata tag
                 res.append(taginfo_toxml(["meta", {"property":"dcterms:modified"}, datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")])) 
+
+                # if there are Media Overlays properties, append the required media:* meta
+                if len(self.moprops) > 0:
+                    total_duration = 0.0
+                    for mo_id in self.moprops:
+                        mo_duration = self.moprops[mo_id]["duration"]
+                        total_duration += mo_duration
+                        res.append(taginfo_toxml(["meta", {"property": "media:duration", "refines": "#%s" % (mo_id)}, "%.3f" % (mo_duration)]))
+                    res.append(taginfo_toxml(["meta", {"property": "media:duration"}, "%.3f" % (total_duration)]))
+                    # TODO try to infer the narrator metadatum from dc:contributor?
+                    #res.append(taginfo_toxml(["meta", {"property": "media:narrator"}, ""]))
+                    res.append(taginfo_toxml(["meta", {"property": "media:active-class"}, "-epub-media-overlay-active"]))
+                    print("..info: adding the -epub-media-overlay-active value for media:active-class")
+                    res.append(taginfo_toxml(["meta", {"property": "media:playback-active-class"}, "-epub-media-overlay-playback-active"]))
+                    print("..info: adding the -epub-media-overlay-playback-active value for media:playback-active-class")
+
+                # close off metadata tag
                 res.append("</metadata>\n")
                 end_metadata = False
                 # fall though
@@ -183,7 +201,9 @@ class Opf_Converter(object):
                         tattr["properties"] = "cover-image"
                     else:
                         tattr["properties"] = cp + " cover-image"
-                    
+                mo_id = self.mid_to_mo_id(id)
+                if mo_id is not None:
+                    tattr["media-overlay"] = mo_id
                 res.append(taginfo_toxml((tname, tattr, None)))
                 continue
 
@@ -256,7 +276,7 @@ class Opf_Converter(object):
                 # res.append(taginfo_toxml((tname, tattr, None)))
                 continue
 
-            if end_guide and not guide in prefix:
+            if end_guide and not "guide" in prefix:
                 # the guide is optional in epub3 so omit it
                 # res.append("</guide>\n") 
                 end_guide = False
@@ -491,6 +511,21 @@ class Opf_Converter(object):
         outtags.append([tname, tattr, tcontent])
         return outtags
 
+
+    def mid_to_mo_id(self, mid):
+        """
+        Return the Media Overlay manifest id
+        associated to the given (XHTML) manifest id,
+        or None if no MO document is associated with the given manifest id.
+
+        :param mid: manifest id
+        :type  mid: str
+        :rtype: str or None
+        """
+        for mo_id in self.moprops:
+            if mid in self.moprops[mo_id]["text_ids"]:
+                return mo_id
+        return None
 
     def get_guide(self):
         return self.guide
