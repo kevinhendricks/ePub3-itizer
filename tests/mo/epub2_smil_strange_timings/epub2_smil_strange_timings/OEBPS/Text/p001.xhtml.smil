@@ -1,0 +1,12 @@
+<smil xmlns="http://www.w3.org/ns/SMIL" xmlns:epub="http://www.idpf.org/2007/ops" version="3.0">
+ <body>
+  <seq id="seq1" epub:textref="p001.xhtml" epub:type="bodymatter chapter">
+   <par id="p000001"><text src="p001.xhtml#f000001"/><audio clipEnd="0:00:02.200" src="../Audio/001_cover.mp3"/></par>
+   <par id="p000002"><text src="p001.xhtml#f000002"/><audio clipBegin="0:00:02.200" clipEnd="0:00:05.300" src="../Audio/001_cover.mp3"/></par>
+   <par id="p000003"><text src="p001.xhtml#f000003"/><audio clipBegin="0:00:05.300" clipEnd="0:00:11.600" src="../Audio/001_cover.mp3"/></par>
+   <par id="p000004"><text src="p001.xhtml#f000004"/><audio clipBegin="0:00:11.600" clipEnd="0:00:17.000" src="../Audio/001_cover.mp3"/></par>
+   <par id="p000005"><text src="p001.xhtml#f000005"/><audio clipBegin="0:00:17.000" clipEnd="0:00:19.300" src="../Audio/001_cover.mp3"/></par>
+   <par id="p000006"><text src="p001.xhtml#f000006"/><audio clipBegin="0:00:19.300" clipEnd="0:00:21.130" src="../Audio/001_cover.mp3"/></par>
+  </seq>
+ </body>
+</smil>

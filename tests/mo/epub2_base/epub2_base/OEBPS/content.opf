@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<package xmlns="http://www.idpf.org/2007/opf" version="2.0" unique-identifier="pubID">
+<metadata xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:opf="http://www.idpf.org/2007/opf">
+
+    <dc:identifier id="pubID" opf:scheme="uuid">urn:uuid:fc9c27e7-237c-4bda-8a98-0751f1c3ffff</dc:identifier>
+
+    <dc:title id="title">Sonnets I-IV (base EPUB2)</dc:title>
+    
+    <dc:creator id="aut" opf:role="aut">William Shakespeare</dc:creator>
+
+    <dc:contributor id="nrt" opf:role="nrt">Chris Hughes</dc:contributor>
+    
+    <dc:contributor id="bkp" opf:role="bkp">ReadBeyond</dc:contributor>
+
+    <dc:language>en</dc:language>
+    <dc:date>2015-12-04</dc:date>
+
+    <dc:publisher>ReadBeyond</dc:publisher>
+    <dc:rights>CC BY-NC-SA 3.0</dc:rights>
+    <dc:subject>William Shakespeare</dc:subject>
+    <dc:subject>Sonnets</dc:subject>
+    <dc:subject>1609</dc:subject>
+    <dc:subject>poetry</dc:subject>
+    <dc:subject>love</dc:subject>
+    <dc:subject>procreation sonnets</dc:subject>
+    <dc:subject>youth</dc:subject>
+    <dc:subject>love</dc:subject>
+    <dc:subject>beauty</dc:subject>
+    <dc:subject>loneliness</dc:subject>
+    <dc:subject>death</dc:subject>
+    <dc:subject>transience</dc:subject>
+    <dc:subject>feelings</dc:subject>
+    <dc:subject>mistress</dc:subject>
+    <dc:subject>Cupid</dc:subject>
+    <dc:description>Shakespeare's sonnets are a collection of 154 sonnets, dealing with themes such as the passage of time, love, beauty and mortality, first published in a 1609 quarto entitled "SHAKE-SPEARES SONNETS. Never before imprinted." (although sonnets 138 and 144 had previously been published in the 1599 miscellany "The Passionate Pilgrim"). The quarto ends with "A Lover's Complaint", a narrative poem of 47 seven-line stanzas written in rhyme royal. The first 17 poems, traditionally called the procreation sonnets, are addressed to a young man urging him to marry and have children in order to immortalize his beauty by passing it to the next generation. Other sonnets express the speaker's love for a young man; brood upon loneliness, death, and the transience of life; seem to criticise the young man for preferring a rival poet; express ambiguous feelings for the speaker's mistress; and pun on the poet's name. The final two sonnets are allegorical treatments of Greek epigrams referring to the "little love-god" Cupid. (From Wikipedia.)</dc:description>
+    <dc:type>Book</dc:type>
+    <meta name="cover" content="cover.jpg" />
+</metadata>
+<manifest>
+    <item id="toc.ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>
+    <item id="toc" href="Text/toc.xhtml" media-type="application/xhtml+xml"/>
+    
+    <item id="cover" href="Text/cover.xhtml" media-type="application/xhtml+xml"/>
+    <item id="colophon" href="Text/colophon.xhtml" media-type="application/xhtml+xml"/>
+    <item id="playlist" href="Text/playlist.xhtml" media-type="application/xhtml+xml"/>
+    <item id="c001" href="Styles/style.css" media-type="text/css"/>
+
+    <item id="cover.jpg" href="Images/cover.jpg" media-type="image/jpeg"/>
+    <item id="logofb.png" href="Images/logofb.png" media-type="image/png"/>
+    <item id="logotw.png" href="Images/logotw.png" media-type="image/png"/>
+    <item id="logowww.png" href="Images/logowww.png" media-type="image/png"/>
+
+    <item id="p001" href="Text/p001.xhtml" media-type="application/xhtml+xml"/>
+    <item id="s001" href="Text/p001.xhtml.smil" media-type="application/smil+xml"/>
+    <item id="m001" href="Audio/001_cover.mp3" media-type="audio/mpeg"/>
+
+    <item id="p002" href="Text/p002.xhtml" media-type="application/xhtml+xml"/>
+    <item id="s002" href="Text/p002.xhtml.smil" media-type="application/smil+xml"/>
+    <item id="m002" href="Audio/002_001.mp3" media-type="audio/mpeg"/>
+
+    <item id="p003" href="Text/p003.xhtml" media-type="application/xhtml+xml"/>
+    <item id="s003" href="Text/p003.xhtml.smil" media-type="application/smil+xml"/>
+    <item id="m003" href="Audio/003_002.mp3" media-type="audio/mpeg"/>
+
+    <item id="p004" href="Text/p004.xhtml" media-type="application/xhtml+xml"/>
+    <item id="s004" href="Text/p004.xhtml.smil" media-type="application/smil+xml"/>
+    <item id="m004" href="Audio/004_003.mp3" media-type="audio/mpeg"/>
+
+    <item id="p005" href="Text/p005.xhtml" media-type="application/xhtml+xml"/>
+    <item id="s005" href="Text/p005.xhtml.smil" media-type="application/smil+xml"/>
+    <item id="m005" href="Audio/005_004.mp3" media-type="audio/mpeg"/>
+
+    <item id="p156" href="Text/p156.xhtml" media-type="application/xhtml+xml"/>
+</manifest>
+<spine toc="toc.ncx">
+    <itemref idref="cover" linear="yes"/>
+    <itemref idref="colophon" linear="yes"/>
+    <itemref idref="p001" linear="yes"/>
+    <itemref idref="p002" linear="yes"/>
+    <itemref idref="p003" linear="yes"/>
+    <itemref idref="p004" linear="yes"/>
+    <itemref idref="p005" linear="yes"/>
+    <itemref idref="p156" linear="yes"/>
+    <itemref idref="playlist" linear="yes"/>
+</spine>
+<guide>
+    <reference type="cover" title="Cover" href="Text/cover.xhtml" />
+    <reference type="toc" title="Contents" href="Text/toc.xhtml" />
+    <reference type="text" title="Sonnets" href="Text/p001.xhtml" />
+</guide>
+</package>
+

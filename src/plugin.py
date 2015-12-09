@@ -93,6 +93,11 @@ _USER_HOME = os.path.expanduser("~")
 
 IS_NAMED_ENTITY = re.compile("(&\w+;)")
 
+NAMESPACE_MAP = {
+    "smil": "http://www.w3.org/ns/SMIL",
+    "epub": "http://www.idpf.org/2007/ops"
+}
+
 # remap any html named enities to numeric entities
 def convert_named_entities(text): 
     pieces = IS_NAMED_ENTITY.split(text)
@@ -106,11 +111,44 @@ def convert_named_entities(text):
     return "".join(pieces)
 
 
+def write_file(data, href, temp_dir, unquote_filename=False, in_oebps=True):
+    """
+    Write data to temp_dir/OEBPS/href (if in_oebps is True),
+    or to temp_dir/href (if in_oebps), passing href through unquote()
+    if unquote_filename is True.
+
+    :param data: the data to be written
+    :type  data: str
+    :param href: the (internal) path of the file
+    :type  href: str
+    :param temp_dir: the path to the temporary directory
+    :type  temp_dir: str
+    :param unquote_filename: if True, pass href through unquote()
+    :type  unquote_filename: bool
+    :param in_oebps: if True, href is into the subtree rooted at OEBPS/
+    :type  in_oebps: bool
+    """
+    if unquote_filename:
+        destdir = ""
+        filename = unquote(href)
+        if "/" in href:
+            destdir, filename = unquote(filename).split("/")
+        fpath = os.path.join(temp_dir, "OEBPS", destdir, filename)
+    else:
+        if in_oebps:
+            fpath = os.path.join(temp_dir, "OEBPS", href)
+        else:
+            fpath = os.path.join(temp_dir, href)
+    with open(fpath, "wb") as file_obj:
+        file_obj.write(data.encode("utf-8"))
+
+
 # the plugin entry point
 def run(bk):
 
     manifest_properties= {}
     spine_properties = {}
+    mo_properties = {}
     epub_types = {}
 
     temp_dir = tempfile.mkdtemp()
@@ -134,13 +172,27 @@ def run(bk):
             epub_types[mid] = etypes
 
         # write out modified file
-        destdir = ""
-        filename = unquote(href)
-        if "/" in href:
-            destdir, filename = unquote(filename).split("/")
-        fpath = os.path.join(temp_dir, "OEBPS", destdir, filename)
-        with open(fpath, "wb") as f:
-            f.write(data.encode('utf-8'))
+        write_file(data, href, temp_dir, unquote_filename=True)
+
+    # detect smil files
+    for mid, href, mt in bk.manifest_iter():
+        if mt == "application/smil+xml":
+            print("..patching: ", href, " with manifest id: ", mid)
+            data, text_ids, audio_ids, duration = patch_smil(bk, mid, href)
+            # store mo properties to add
+            # <meta property="media:duration" ...> elements
+            # and media-overlay attributes to opf3
+            # text_ids: list of manifest ids of text files referenced by the smil file
+            # audio_ids: list of manifest ids of audio files referenced by the smil file
+            # duration: float, the duration (in seconds) of the smil file
+            mo_properties[mid] = {
+                "href": href,
+                "text_ids": text_ids,
+                "audio_ids": audio_ids,
+                "duration": duration
+            }
+            # write out modified file
+            write_file(data, href, temp_dir, unquote_filename=True)
 
     print("..converting: OEBPS/content.opf")
 
@@ -148,14 +200,29 @@ def run(bk):
     # while merging in previously collected spine and manifest properties
     opf2 = bk.readotherfile("OEBPS/content.opf")
 
-    opfconv = Opf_Converter(opf2, spine_properties, manifest_properties)
+    opfconv = Opf_Converter(opf2, spine_properties, manifest_properties, mo_properties)
     guide_info = opfconv.get_guide()
     lang = opfconv.get_lang()
     opf3 = opfconv.get_opf3()
+    write_file(opf3, "content.opf", temp_dir)
 
-    fpath = os.path.join(temp_dir, "OEBPS", "content.opf")
-    with open(fpath, "wb") as f:
-        f.write(opf3.encode('utf-8'))
+    # It is possible that the original EPUB2 <guide> contains references
+    # to files not in the spine;
+    # putting those "dangling" references in the EPUB3 navigation document
+    # will result in validation error:
+    # RSC-011 "Found a reference to a resource that is not a spine item.".
+    # Hence, we must check that the referenced files are listed in the spine.
+    guide_info_in_spine = []
+    spine_hrefs = [t[2] for t in bk.spine_iter()]
+    for gtyp, gtitle, ghref in guide_info:
+        if ghref in spine_hrefs:
+            guide_info_in_spine.append((gtyp, gtitle, ghref))
+        else:
+            print(
+                "..info: the EPUB2 <guide> contains a reference to a resource that is not a spine item: '",
+                ghref,
+                "', not adding it to the guide landmark in nav.xhtml"
+            )
 
     # need to take info from the old opf2 guide, epub_type semantics info
     # and toc.ncx to create a valid "nav.xhtml"
@@ -165,19 +232,16 @@ def run(bk):
 
     # now build up a nav
     print("..creating: OEBPS/nav.xhtml")
-    navdata = build_nav(doctitle, toclist, pagelist, guide_info, epub_types, lang)
-    fpath = os.path.join(temp_dir, "OEBPS", "nav.xhtml")
-    with open(fpath, "wb") as f:
-        f.write(navdata.encode('utf-8'))
+    navdata = build_nav(doctitle, toclist, pagelist, guide_info_in_spine, epub_types, lang)
+    write_file(navdata, "nav.xhtml", temp_dir)
 
     # finally ready to build epub
     print("..creating: epub3")
     data = "application/epub+zip"
-    fpath = os.path.join(temp_dir,"mimetype")
-    with open(fpath, "wb") as f:
-        f.write(data.encode('utf-8'))
+    write_file(data, "mimetype", temp_dir, in_oebps=False)
 
     # ask the user where he/she wants to store the new epub
+    # TODO use dc:title from the OPF file instead
     if doctitle is None or doctitle == "":
         doctitle = "filename"
     fname = cleanup_file_name(doctitle) + "_epub3.epub"
@@ -206,7 +270,157 @@ def run(bk):
     # anything else means failure
     return 0
  
- 
+
+def patch_smil(bk, mid, href):
+    """
+    Read the given SMIL file, and patches it, setting the suitable
+    src attributes for <audio> and <text> elements,
+    and epub:textref for <smil>, <body>, <seq> and <par> elements.
+
+    Return a tuple (data, text_ids, audio_ids, duration), where
+    data is a str containing the patched SMIL file contents,
+    text_ids (resp., audio_ids) is a list of manifest ids
+    of referenced text (resp., audio) files;
+    and duration is a float representing the total duration
+    of the SMIL file, in seconds.
+
+    If the SMIL file cannot be parsed, or an error occurs,
+    return (original_SMIL_file_data, [], [], 0.0)
+    and print an error message.
+
+    :param bk: the current book
+    :type  bk: BookContainer
+    :param mid: manifest id of the SMIL file
+    :type  mid: str
+    :param href: path of the SMIL file
+    :type  href: str
+    :rtype: tuple
+    """
+    text_ids = set()
+    audio_ids = set()
+    duration = 0.0
+
+    original_smil_data = bk.readfile(mid)
+    try:
+        # parse SMIL file
+        # this is a very simplified parsing, as it simply extract <text> and <audio> elements
+        # it should cover any reasonable SMIL file, though
+        import lxml.etree as etree
+        root = etree.fromstring(original_smil_data)
+
+        # patch epub:textref attributes, if present
+        ns_textref = "{%s}textref" % (NAMESPACE_MAP["epub"])
+        for elem in ["smil", "body", "seq", "par"]:
+            els = root.xpath("//smil:%s" % (elem), namespaces=NAMESPACE_MAP)
+            for el in els:
+                textref = el.get(ns_textref)
+                if textref is not None:
+                    textref = os.path.basename(textref)
+                    el.set(ns_textref, "../Text/%s" % (textref))
+
+        # deal with <text> elements
+        text_els = root.xpath("//smil:text", namespaces=NAMESPACE_MAP)
+        for text_el in text_els:
+            src = text_el.get("src")
+            if src is None:
+                print("..error: failure while parsing SMIL file (no src in <text>), the SMIL file will not be patched")
+                return original_smil_data, [], [], 0.0
+            src = os.path.basename(src)
+            frag = ""
+            idx = src.find("#")
+            if idx > -1:
+                frag = src[idx+1:]
+                src = src[:idx]
+            tmid = bk.basename_to_id(src)
+            if tmid is None:
+                print("..error: failure while parsing SMIL file (cannot map text src into manifest id), the SMIL file will not be patched")
+                return original_smil_data, [], [], 0.0
+            text_ids.add(tmid)
+            text_el.set("src", "../Text/%s#%s" % (src, frag))
+
+        # deal with <audio> elements
+        audio_els = root.xpath("//smil:audio", namespaces=NAMESPACE_MAP)
+        for audio_el in audio_els:
+            src = audio_el.get("src")
+            if src is None:
+                print("..error: failure while parsing SMIL file (no src in <audio>), the SMIL file will not be patched")
+                return original_smil_data, [], [], 0.0
+            src = os.path.basename(src)
+            tmid = bk.basename_to_id(src)
+            if tmid is None:
+                print("..error: failure while parsing SMIL file (cannot map audio src into manifest id), the SMIL file will not be patched")
+                return original_smil_data, [], [], 0.0
+            audio_ids.add(tmid)
+            audio_el.set("src", "../Audio/%s" % (src))
+
+            clipBegin = audio_el.get("clipBegin")
+            clipEnd = audio_el.get("clipEnd")
+            if clipBegin is None:
+                # per spec, when omitted, clipBegin should be assumed to be zero
+                # setting as a string, it will converted by clip_time_string_to_float later
+                clipBegin = "0.0"
+            if clipEnd is None:
+                # per spec, when omitted, clipEnd should be assumed
+                # equal to the length of the audio file
+                # since we cannot determine it here,
+                # we set it to zero and print a warning
+                print("..warning: <audio> element without clipEnd attribute, duration might be inaccurate")
+                clipEnd = clipBegin
+            duration += (clip_time_string_to_float(clipEnd) - clip_time_string_to_float(clipBegin))
+
+        # generate a new string
+        # we decode for consistency with the rest of the code
+        new_smil_data = etree.tostring(root, pretty_print=True).decode("utf-8")
+    except:
+        print("..error: failure while parsing SMIL file (generic), the SMIL file will not be patched")
+        return original_smil_data, [], [], 0.0
+
+    return new_smil_data, list(text_ids), list(audio_ids), duration 
+
+
+def clip_time_string_to_float(string):
+    """
+    Convert the given clip time string in seconds
+    (possibly with decimal digits).
+
+    :param string: the clip time string to be converted
+    :type  string: str
+    :returns:      the clip time in seconds
+    :rtype:        float
+    """
+    if (string == None) or (len(string) < 1):
+        return 0
+    value = 0
+    if "ms" in string:
+        value = float(string.replace("ms", "")) * 0.001
+    elif "s" in string:
+        value = float(string.replace("s", ""))
+    elif "h" in string:
+        value = float(string.replace("h", "")) * 3600
+    elif "min" in string:
+        value = float(string.replace("min", "")) * 60
+    else:
+        v_h = 0
+        v_m = 0
+        v_s = 0
+        v_d = 0
+        str_hms = string
+        if "." in str_hms:
+            str_hms, str_d = str_hms.split(".")
+            if len(str_d) > 0:
+                v_d = 1.0 * int(str_d) / (10 ** len(str_d))
+        arr_hms = str_hms.split(":")
+        v_n = len(arr_hms)
+        if v_n >= 1:
+            v_s = int(arr_hms[-1])
+        if v_n >= 2:
+            v_m = int(arr_hms[-2])
+        if v_n >= 3:
+            v_h = int(arr_hms[-3])
+        value = v_h * 3600 + v_m * 60 + v_s + v_d
+    return value
+
+
 # convert xhtml to be epub3 friendly
 #  - convert DOCTYPE
 #  - add needed namespaces to html tag
