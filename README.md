@@ -1,10 +1,11 @@
 **ePub3-itizer** is a python 2.7 and python 3.4 output plugin for Sigil 
 that will convert a valid epub2 epub into a valid epub3 epub.
 
-Updated: December 9, 2015
+Updated: December 14, 2015
 
 **Very Important Note**
-Support for this plugin is only provided for Sigil 0.8.6 or later. This plugin requires Sigil 0.8.2 or later to even operate.
+Support for this plugin is only provided for Sigil 0.8.6 or later. 
+This plugin requires Sigil 0.8.2 or later to even operate.
 
 
 **How it Converts from valid epub2 to epub3**
@@ -31,14 +32,21 @@ Then it reads the current opf and converts it on the fly to meet package 3 requi
 - adds an entry in the manifest for the new nav document
 - adds the new nav document to the end of spine
 
-Then it parses the current toc.ncx extracting doctitle, toc, and any pagelist information and removes its DOCTYPE
+Then it parses the current toc.ncx extracting doctitle, toc, and any pagelist 
+information and removes its DOCTYPE
 
-It then merges this with the original guide information from the opf2 to create a new nav.xhtml file.
-It will now nicely handle multi-level tocs.
+It then merges this with the original guide information from the opf2 
+to create a new nav.xhtml file. It will now nicely handle multi-level tocs.
 
-Finally it adds the mimetype file and zips it all up and then launches a gui to ask the user what to name the file and where to save it.
+Finally it adds the mimetype file and zips it all up and then launches a gui 
+to ask the user what to name the file and where to save it.
+
+
+Please note:  Special thanks go to Alberto Pettarin who contributed all of 
+the code to for handling Media Overaly metadata.  Please contact him at
+http://www.albertopettarin.it/contact.html for issues realted to SMIL files.
 
 ---
 
-Thanks to Doitsu, DiapDealer, and JonathanMagus and others for reporting back bugs. 
+Thanks also go to Doitsu, DiapDealer, and JonathanMagus and others for reporting back bugs. 
 I think this code is now stable and usable. Bug reports and feature requests welcomed.

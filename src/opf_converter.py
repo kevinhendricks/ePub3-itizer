@@ -193,7 +193,7 @@ class Opf_Converter(object):
                     # per https://github.com/idpf/epub-revision/issues/443
                     # for Epub 3.1 this will be "application/font-sfnt"
                     # mtype = "application/font-sfnt"
-                    mtype = "application/vnd.ms.opentype"
+                    mtype = "application/vnd.ms-opentype"
                 self.man_ids.append(id)
                 if mtype == "application/x-dtbncx+xml":
                     self.has_ncx = id
