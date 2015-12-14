@@ -1,21 +1,23 @@
-V032 
--  Fixed typo bug in opf_converter that caused problem with spine properties 
-   (Thanks DiapDealer for the fix! And thanks Olivier_g for the bug report!)
+V033 
+  - Alpe has contributed a major new feature - support for SMIL generation via this plugin and one of his own
+  - added hidden="" attribute to nav landmark and page-list (thnaks to Doitsu for pointing this out)
+  - added proper id attributes to landmark and nav all allow inline nav styles to work (via patch from Doitsu) 
+  - added back passing guide through to the new epub3 opf as aid for backwards compatibility
+  - remap media types x-font-ttf and x-font-opentype both to vnd.ms-opentype.  This will change to font-sfnt with Epub 3.1
+  
 
--  added lang= and xml:lang= to specify language from opf dc:language for nav.xhtml 
+V032 
+  -  Fixed typo bug in opf_converter that caused problem with spine properties 
+       (Thanks DiapDealer for the fix! And thanks Olivier_g for the bug report!)
+  -  added lang= and xml:lang= to specify language from opf dc:language for nav.xhtml 
 
 V031
-- Fixed nasty bug I introduced in v030 that downcased all ncx tags and removed navPoints
-  Thanks for Dotisu for catching this error
+  - Fixed nasty bug I introduced in v030 that downcased all ncx tags and removed navPoints
+       (Thanks for Dotisu for catching this error)
 
 V030
--  nav changes to add style in head to prevent display of landmarks
-   and to use ol list-style-none
-
-- remove "linear = "yes" from nav entry in spine
-
-- remove DOCTYPE from toc.ncx (not sure if this is correct or not)
-
-- remove guide from content.opf since now optional
-
-- should now properly identify and add manifest properties "scripted"
+  -  nav changes to add style in head to prevent display of landmarks and to use ol list-style-none
+  - remove "linear = "yes" from nav entry in spine
+  - remove DOCTYPE from toc.ncx (not sure if this is correct or not)
+  - remove guide from content.opf since now optional
+  - should now properly identify and add manifest properties "scripted"

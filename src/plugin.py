@@ -556,7 +556,7 @@ def build_nav(doctitle, toclist, pagelist, guide_info, epub_types, lang):
     navres.append(ind + '<head>\n')
     navres.append(ind*2 + '<meta charset="utf-8" />\n')
     navres.append(ind*2 + '<style type="text/css">\n')
-    navres.append(ind*2 + 'nav#landmarks { display:none; }\n')
+    navres.append(ind*2 + 'nav#landmarks, nav#page-list { display:none; }\n')
     navres.append(ind*2 + 'ol { list-style-type: none; }\n')
     navres.append(ind*2 + '</style>\n')
     navres.append(ind + '</head>\n')
@@ -603,7 +603,7 @@ def build_nav(doctitle, toclist, pagelist, guide_info, epub_types, lang):
 
     # add any existing page-list if need be
     if len(pagelist) > 0:
-        navres.append(ind*2 + '<nav epub:type="page-list">\n')
+        navres.append(ind*2 + '<nav epub:type="page-list" id="page-list" hidden="">\n')
         navres.append(ind*3 + '<ol>\n')
         for pn, href in pagelist:
             navres.append(ind*4 + '<li><a href="%s">%s</a></li>\n' % (href, pn))
@@ -611,7 +611,7 @@ def build_nav(doctitle, toclist, pagelist, guide_info, epub_types, lang):
         navres.append(ind*2 + '</nav>\n')
     
     # use the guide from the opf2 to create the landmarks section
-    navres.append(ind*2 + '<nav epub:type="landmarks" id="landmarks">\n')
+    navres.append(ind*2 + '<nav epub:type="landmarks" id="landmarks" hidden="">\n')
     navres.append(ind*3 + '<h2>Guide</h2>\n')
     navres.append(ind*3 + '<ol>\n')
     for gtyp, gtitle, ghref in guide_info:

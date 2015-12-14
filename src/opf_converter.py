@@ -188,6 +188,12 @@ class Opf_Converter(object):
             if prefix.endswith("manifest") and tname == "item":
                 id = tattr.get("id",'')
                 mtype = tattr.get("media-type","")
+                # remap font media types to something epub3 can live with
+                if mtype in ("application/x-font-ttf", "application/x-font-opentype") :
+                    # per https://github.com/idpf/epub-revision/issues/443
+                    # for Epub 3.1 this will be "application/font-sfnt"
+                    # mtype = "application/font-sfnt"
+                    mtype = "application/vnd.ms.opentype"
                 self.man_ids.append(id)
                 if mtype == "application/x-dtbncx+xml":
                     self.has_ncx = id
@@ -261,8 +267,9 @@ class Opf_Converter(object):
 
             # guide
             if tname == "guide":
-                # the guide is optional in epub3 so omit it
-                # res.append("<guide>\n")
+                # allow the guide to pass through to an epub3 opf guide
+                # even though optional 
+                res.append("<guide>\n")
                 end_guide = True
                 continue
 
@@ -272,13 +279,13 @@ class Opf_Converter(object):
                 title = tattr.get("title",'')
                 href = tattr.get("href",'')
                 self.guide.append((type, title, href))
-                # the guide is optional in epub3 so omit it
-                # res.append(taginfo_toxml((tname, tattr, None)))
+                # allow the guide to pass through to the epub3 opf 
+                res.append(taginfo_toxml((tname, tattr, None)))
                 continue
 
             if end_guide and not "guide" in prefix:
-                # the guide is optional in epub3 so omit it
-                # res.append("</guide>\n") 
+                # allow the guide to pass through to the epub3 opf
+                res.append("</guide>\n") 
                 end_guide = False
 
                 # also close off package since tours was deprecated in opf2 and gone from opf3 
@@ -287,8 +294,8 @@ class Opf_Converter(object):
                 # fall through
 
         if end_guide:
-                # the guide is optional in epub3 so omit it
-            # res.append("</guide>\n")
+            # allow the guide to pass thorugh to the epub3 opf
+            res.append("</guide>\n")
             end_guide = False
 
         if end_package:
