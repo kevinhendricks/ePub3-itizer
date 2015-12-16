@@ -289,7 +289,7 @@ class Opf_Converter(object):
                 # allow the guide to pass through to the epub3 opf
                 guide_res.append("</guide>\n")
                 if len(self.guide) > 0:
-                    res.append(guide_res)
+                    res.extend(guide_res)
                 guide_res = []
                 end_guide = False
 
@@ -302,7 +302,7 @@ class Opf_Converter(object):
             # allow the guide to pass thorugh to the epub3 opf
             guide_res.append("</guide>\n")
             if len(self.guide) > 0:
-                res.append(guide_res)
+                res.extend(guide_res)
             guide_res = []
             end_guide = False
 
