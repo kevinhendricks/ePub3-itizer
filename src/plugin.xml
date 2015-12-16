@@ -6,6 +6,6 @@
 <description>Create ePub 3 from valid ePub2 with extensions</description>
 <engine>python3.4</engine>
 <engine>python2.7</engine>
-<version>0.3.3</version>
+<version>0.3.4</version>
 <oslist>osx,win,unx</oslist>
 </plugin>

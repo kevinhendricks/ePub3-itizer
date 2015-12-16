@@ -1,3 +1,7 @@
+V034
+  - prevent empty guide elements from being introduced into epub3 opf as marked as an error
+  - actually use the just fixed media-types for fonts
+
 V033 
   - Alpe has contributed a major new feature - support for SMIL generation via this plugin and one of his own
   - added hidden="" attribute to nav landmark and page-list (thnaks to Doitsu for pointing this out)
