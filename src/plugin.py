@@ -146,6 +146,14 @@ def write_file(data, href, temp_dir, unquote_filename=False, in_oebps=True):
 # the plugin entry point
 def run(bk):
 
+    # protect against epub3 epubs being sent to ePub3-itizer
+    epubversion = "2.0"
+    if bk.launcher_version() >= 20160102:
+        epubversion = bk.epub_version()
+    if epubversion.startswith("3"):
+        print("Error: ePub3-itizer requires a valid epub 2.0 ebook as input")
+        return -1
+
     manifest_properties= {}
     spine_properties = {}
     mo_properties = {}

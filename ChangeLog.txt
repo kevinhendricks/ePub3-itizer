@@ -1,3 +1,7 @@
+v035
+  - add code to ensure only epub2 epubs are passed to ePub3-itizer
+  - also enable autostart, and update plugin.xml version
+
 V034
   - prevent empty guide elements from being introduced into epub3 opf as marked as an error
   - actually use the just fixed media-types for fonts
