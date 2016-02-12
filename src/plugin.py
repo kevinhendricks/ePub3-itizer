@@ -310,6 +310,10 @@ def patch_smil(bk, mid, href):
 
     original_smil_data = bk.readfile(mid)
     try:
+        # remove the XML declaration, if present
+        # otherwise lxml.etree will choke on it
+        original_smil_data = original_smil_data.replace('<?xml version="1.0" encoding="utf-8" ?>', "").strip()
+
         # parse SMIL file
         # this is a very simplified parsing, as it simply extract <text> and <audio> elements
         # it should cover any reasonable SMIL file, though
