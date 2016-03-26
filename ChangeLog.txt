@@ -1,3 +1,6 @@
+v036
+  - Bug fix to prevent xml headers on smil files from interfering with the plugin
+
 v035
   - add code to ensure only epub2 epubs are passed to ePub3-itizer
   - also enable autostart, and update plugin.xml version
