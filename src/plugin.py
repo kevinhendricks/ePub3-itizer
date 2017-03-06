@@ -255,6 +255,21 @@ def run(bk):
     fname = cleanup_file_name(doctitle) + "_epub3.epub"
     localRoot = tkinter.Tk()
     localRoot.withdraw()
+ 
+    # localRoot is is an empty topmost root window that is hidden by withdrawing it
+    # but localRoot needs to be centred, and lifted and focus_force used
+    # so that its child dialog will inherit focus upon launch
+    localRoot.overrideredirect(True)
+    # center on screen but make size 0 to hide the empty localRoot
+    w = localRoot.winfo_screenwidth()
+    h = localRoot.winfo_screenheight()
+    x = int(w/2)
+    y = int(h/2)
+    localRoot.geometry('%dx%d+%d+%d' % (0, 0, x, y))
+    localRoot.deiconify()
+    localRoot.lift()
+    localRoot.focus_force()
+
     fpath = tkinter_filedialog.asksaveasfilename(
         parent=localRoot,
         title="Save ePub3 as ...",
