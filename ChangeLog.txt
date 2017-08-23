@@ -1,3 +1,12 @@
+v038
+  - restrict fix that forced focus to Mac systems to prevent problems on other platforms
+  - remove display:none css from parts of the nav since they are redudant given the hidden attribute
+  - remove empty dc: metadata since for epub3 epubcheck barfs on it
+  - Add LGPL V2 or LGPL V3 license info to plugin.py
+
+v037
+  - Attempt to force the FileDialog to the front with focus so people know the plugin is running 
+
 v036
   - Bug fix to prevent xml headers on smil files from interfering with the plugin
 

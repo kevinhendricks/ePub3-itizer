@@ -436,6 +436,11 @@ class Opf_Converter(object):
     def map_dc(self, tname, tattr, tcontent):
         outtags = []
 
+        # epub3 does not like empty dc tags so ignore them
+        if tcontent is None or tcontent == "":
+            outtags.append([None,None,None])
+            return outtags
+
         if tname == "dc:title":
             self.title_cnt += 1
             id = "t%d" % self.title_cnt

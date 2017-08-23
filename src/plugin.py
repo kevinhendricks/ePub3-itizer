@@ -2,6 +2,12 @@
 # -*- coding: utf-8 -*-
 # vim:ts=4:sw=4:softtabstop=4:smarttab:expandtab
 
+# Copyright 2015-2017 Kevin B. Hendricks, Stratford Ontario
+
+# This plugin's source code is available under the GNU LGPL Version 2.1 or GNU LGPL Version 3 License.
+# See https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html or
+# https://www.gnu.org/licenses/lgpl.html for the complete text of the license.
+
 from __future__ import unicode_literals, division, absolute_import, print_function
 
 import sys
@@ -584,7 +590,8 @@ def build_nav(doctitle, toclist, pagelist, guide_info, epub_types, lang):
     navres.append(ind + '<head>\n')
     navres.append(ind*2 + '<meta charset="utf-8" />\n')
     navres.append(ind*2 + '<style type="text/css">\n')
-    navres.append(ind*2 + 'nav#landmarks, nav#page-list { display:none; }\n')
+    # redundant with hidden attributes used later
+    # navres.append(ind*2 + 'nav#landmarks, nav#page-list { display:none; }\n')
     navres.append(ind*2 + 'ol { list-style-type: none; }\n')
     navres.append(ind*2 + '</style>\n')
     navres.append(ind + '</head>\n')
