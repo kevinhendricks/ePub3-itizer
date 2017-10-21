@@ -484,6 +484,10 @@ def convert_xhtml(bk, mid, href):
             elif tname == "html":
                 tattr['xmlns:epub'] = "http://www.idpf.org/2007/ops"
 
+            elif tname == "link":
+                if "charset" in tattr:
+                    del tattr["charset"]
+
             elif tname == "meta":
                 mname = tattr.get("name","")
                 mcontent = tattr.get("content", "")
