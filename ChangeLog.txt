@@ -1,3 +1,8 @@
+v039
+  - recognize and convert calibre:series and calibre:series_index to their epub3 equivalents
+  - added simple 48x48 plugin.png icon for use in Sigil QuickLaunch Toolbar icons
+  - remove any charset attribute from link tags since epubcheck objects
+
 v038
   - restrict fix that forced focus to Mac systems to prevent problems on other platforms
   - remove display:none css from parts of the nav since they are redudant given the hidden attribute
