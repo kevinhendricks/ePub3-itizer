@@ -57,6 +57,8 @@ class Opf_Converter(object):
         self.title_cnt = 0
         self.creator_cnt = 0
         self.contributor_cnt = 0
+        self.series = None
+        self.series_index = None
         self.cover_id = None
         self.man_ids = []
         self.has_ncx = None
@@ -141,6 +143,10 @@ class Opf_Converter(object):
                     self.cover_id = tattr.get("content",None)
                 if tattr.get("name","") == "page-progression-direction":
                     self.ppd = tattr.get("content", None)
+                if tattr.get("name","") == "calibre:series":
+                    self.series = tattr.get("content", None)
+                if tattr.get("name","") == "calibre:series_index":
+                    self.series_index = tattr.get("content", None)
 
                 updated_tags = self.map_meta(tname, tattr, None)
                 for updated_tag in updated_tags: 
@@ -156,7 +162,14 @@ class Opf_Converter(object):
                 continue
 
             if end_metadata and not "metadata" in prefix:
-                # append the required dcterms modified information and close off metadata tag
+                # if calibre:series info was present convert it to its epub3 equivalent
+                if self.series is not None:
+                    res.append(taginfo_toxml(["meta",{"id":"series", "property":"belongs-to-collection"}, self.series]))
+                    res.append(taginfo_toxml(["meta",{"refines":"#series", "property":"collection-type"}, "series"]))
+                    if self.series_index is not None:
+                        res.append(taginfo_toxml(["meta",{"refines":"#series", "property":"group-position"}, self.series_index]))
+
+                # append the required dcterms modified information
                 res.append(taginfo_toxml(["meta", {"property":"dcterms:modified"}, datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")])) 
 
                 # if there are Media Overlays properties, append the required media:* meta
