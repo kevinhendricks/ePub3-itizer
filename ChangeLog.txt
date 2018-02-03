@@ -1,6 +1,7 @@
 v040
   - recognize and convert calibre:title_sort to its epub3 equivalent
   - update 48x48 quicklaunch plugin to enhance readability
+  - make opf id generation more robust to prevent the potential for id clashes
 
 v039
   - recognize and convert calibre:series and calibre:series_index to their epub3 equivalents
