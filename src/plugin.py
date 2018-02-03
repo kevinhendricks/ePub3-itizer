@@ -210,11 +210,17 @@ def run(bk):
 
     print("..converting: OEBPS/content.opf")
 
+    # first create a list of all ids used in the epub2 opf manifest to help
+    # prevent id clashes when generating new metadta ids for refines in the new opf
+    man_ids = []
+    for (id, href, mime) in bk.manifest_iter():
+        man_ids.append(id)
+
     # now parse opf2 converting it to opf3 format
     # while merging in previously collected spine and manifest properties
     opf2 = bk.readotherfile("OEBPS/content.opf")
 
-    opfconv = Opf_Converter(opf2, spine_properties, manifest_properties, mo_properties)
+    opfconv = Opf_Converter(opf2, spine_properties, manifest_properties, mo_properties, man_ids)
     guide_info = opfconv.get_guide()
     lang = opfconv.get_lang()
     opf3 = opfconv.get_opf3()

@@ -47,7 +47,7 @@ _OPF_PARENT_TAGS = ['?xml', 'package', 'metadata', 'dc-metadata', 'x-metadata', 
 
 class Opf_Converter(object):
 
-    def __init__(self, opf2data, spine_properties, manifest_properties, mo_properties):
+    def __init__(self, opf2data, spine_properties, manifest_properties, mo_properties, man_ids):
         self.opf = opf2data
         self.sprops = spine_properties.copy()
         self.mprops = manifest_properties.copy()
@@ -59,8 +59,9 @@ class Opf_Converter(object):
         self.contributor_cnt = 0
         self.series = None
         self.series_index = None
+        self.title_id = None
         self.cover_id = None
-        self.man_ids = []
+        self.all_ids = man_ids.copy()
         self.has_ncx = None
         self.has_pmap = None
         self.ppd = None
@@ -69,6 +70,12 @@ class Opf_Converter(object):
         self.res = []
         self._convertOpf()
 
+
+    def valid_id(self, candidate):
+        newid = candidate
+        while newid in self.all_ids:
+            newid = "x" + newid
+        return newid
 
     # OPF tag iterator
     def _opf_tag_iter(self):
@@ -123,6 +130,9 @@ class Opf_Converter(object):
             if tname == "package":
                 tattr["version"] = "3.0"
                 tattr["prefix"] = "rendition: http://www.idpf.org/vocab/rendition/#"
+                uniqueid = tattr.get("unique-identifier", None)
+                if uniqueid is not None:
+                    self.all_ids.append(uniqueid)
                 res.append(create_starttag(tname, tattr))
                 end_package = True
                 continue
@@ -136,22 +146,31 @@ class Opf_Converter(object):
                 end_metadata= True
                 continue
 
-            
             if "metadata" in prefix and tname == "meta":
                 # collect info from basic meta name value pairs if present
+                # handle calibre: specific metadata
+                if tattr.get("name","") == "calibre:series":
+                    self.series = tattr.get("content", None)
+                    continue
+                if tattr.get("name","") == "calibre:series_index":
+                    self.series_index = tattr.get("content", None)
+                    continue
+                if tattr.get("name","") == "calibre:title_sort":
+                    title_sort = tattr.get("content", None)
+                    if title_sort is not None:
+                        if self.title_id is None:
+                            self.title_id = self.valid_id("title1")
+                        res.append(taginfo_toxml(["meta",{"refines":"#"+self.title_id, "property":"file-as"},title_sort]))
+                    continue
                 if tattr.get("name","") == "cover":
                     self.cover_id = tattr.get("content",None)
                 if tattr.get("name","") == "page-progression-direction":
                     self.ppd = tattr.get("content", None)
-                if tattr.get("name","") == "calibre:series":
-                    self.series = tattr.get("content", None)
-                if tattr.get("name","") == "calibre:series_index":
-                    self.series_index = tattr.get("content", None)
 
                 updated_tags = self.map_meta(tname, tattr, None)
                 for updated_tag in updated_tags: 
                     res.append(taginfo_toxml(updated_tag))
-                continue    
+                continue
 
             if "metadata" in prefix and tname.startswith("dc:"):
                 if tname == "dc:language":
@@ -164,10 +183,11 @@ class Opf_Converter(object):
             if end_metadata and not "metadata" in prefix:
                 # if calibre:series info was present convert it to its epub3 equivalent
                 if self.series is not None:
-                    res.append(taginfo_toxml(["meta",{"id":"series", "property":"belongs-to-collection"}, self.series]))
-                    res.append(taginfo_toxml(["meta",{"refines":"#series", "property":"collection-type"}, "series"]))
+                    series_id = self.valid_id("series")
+                    res.append(taginfo_toxml(["meta",{"id":series_id, "property":"belongs-to-collection"}, self.series]))
+                    res.append(taginfo_toxml(["meta",{"refines":"#" + series_id, "property":"collection-type"}, "series"]))
                     if self.series_index is not None:
-                        res.append(taginfo_toxml(["meta",{"refines":"#series", "property":"group-position"}, self.series_index]))
+                        res.append(taginfo_toxml(["meta",{"refines":"#"+series_id, "property":"group-position"}, self.series_index]))
 
                 # append the required dcterms modified information
                 res.append(taginfo_toxml(["meta", {"property":"dcterms:modified"}, datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")])) 
@@ -209,7 +229,6 @@ class Opf_Converter(object):
                     # mtype = "application/font-sfnt"
                     mtype = "application/vnd.ms-opentype"
                     tattr["media-type"] = mtype
-                self.man_ids.append(id)
                 if mtype == "application/x-dtbncx+xml":
                     self.has_ncx = id
                 elif mtype == "application/oebs-page-map+xml":
@@ -230,11 +249,9 @@ class Opf_Converter(object):
 
             if end_manifest and not "manifest" in prefix:
                 # add in as yet to be created nav document
-                self.nid = "navid"
-                while self.nid in self.man_ids:
-                    self.nid = "x" + self.nid
+                self.nid = self.valid_id("navid")
                 res.append('<item id="%s" media-type="application/xhtml+xml" href="nav.xhtml" properties="nav" />\n' % self.nid)
-                self.man_ids.append(self.nid)
+                self.all_ids.append(self.nid)
                 # close off manifest
                 res.append("</manifest>\n")
                 end_manifest = False
@@ -411,6 +428,9 @@ class Opf_Converter(object):
     # map some fixed layout tags 
     # otherwise pass old meta data through as is
     def map_meta(self, tname, tattr, tcontent):
+        # remove any unnecessary pre-existing ids
+        if "id" in tattr:
+            del tattr["id"]
         outtags=[]
         aname = tattr.get("name","")
         acont = tattr.get("content","")
@@ -454,12 +474,18 @@ class Opf_Converter(object):
             outtags.append([None,None,None])
             return outtags
 
+        if tattr is None:
+            tattr = {}
+
         if tname == "dc:title":
             self.title_cnt += 1
-            id = "t%d" % self.title_cnt
+            id = "title%d" % self.title_cnt
+            id = self.valid_id(id)
+            self.all_ids.append(id)
             tattr["id"] = id
             outtags.append([tname, tattr, tcontent])
             if self.title_cnt==1:
+                self.title_id = id
                 nattr = {}
                 nattr["refines"] = "#" + id
                 nattr["property"] = "title-type"
@@ -502,6 +528,8 @@ class Opf_Converter(object):
             else:
                 self.contributor_cnt += 1
                 id = "contrib%d" % self.contributor_cnt
+            id = self.valid_id(id)
+            self.all_ids.append(id)
             tattr["id"] = id
             role = None
             fileas = None
@@ -526,6 +554,8 @@ class Opf_Converter(object):
             return outtags
 
         if tname == "dc:identifier":
+            if "id" in tattr:
+                self.all_ids.append(tattr["id"])
             if "opf:scheme" in tattr:
                 scheme = tattr["opf:scheme"].lower()
                 del tattr["opf:scheme"]
@@ -534,13 +564,17 @@ class Opf_Converter(object):
             outtags.append([tname, tattr, tcontent])
             return outtags
 
+        # remove any spurious id attributes from remaing dc metada
+        # to keep the id namespace cleaner
+        if "id" in tattr:
+            del tattr["id"]
+
         # remove any opf: attributes from the remaining dc types
-        if tattr is not None:
-            nattr = {}
-            for key in tattr:
-                if not key.startswith("opf:"):
-                    nattr[key] = tattr[key]
-            tattr = nattr
+        nattr = {}
+        for key in tattr:
+            if not key.startswith("opf:"):
+                nattr[key] = tattr[key]
+        tattr = nattr
         outtags.append([tname, tattr, tcontent])
         return outtags
 
