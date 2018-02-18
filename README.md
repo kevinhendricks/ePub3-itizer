@@ -50,3 +50,8 @@ http://www.albertopettarin.it/contact.html for issues realted to SMIL files.
 
 Thanks also go to Doitsu, DiapDealer, and JonathanMagus and others for reporting back bugs. 
 I think this code is now stable and usable. Bug reports and feature requests welcomed.
+
+
+See the Sigil Plugin Index on MobileRead to find out more about this plugin and other plugins available for Sigil:
+https://www.mobileread.com/forums/showthread.php?t=247431
+
