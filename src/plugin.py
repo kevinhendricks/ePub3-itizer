@@ -539,7 +539,7 @@ def parse_ncx(bk, temp_dir):
     pagelist = []
     toclist = []
     doctitle = None
-    navlable = None
+    navlabel = None
     pagenum = None
     skip_if_newline = False
     lvl = 0

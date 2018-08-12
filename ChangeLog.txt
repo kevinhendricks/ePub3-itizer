@@ -1,3 +1,6 @@
+pre-v041
+  - fix typo that caused bug when creating nav from ncx
+
 v040
   - recognize and convert calibre:title_sort to its epub3 equivalent
   - update 48x48 quicklaunch plugin to enhance readability
