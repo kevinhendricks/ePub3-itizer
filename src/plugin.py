@@ -466,6 +466,7 @@ def clip_time_string_to_float(string):
 #  - add needed namespaces to html tag
 #  - convert meta charset
 #  - convert html named character entities to numeric entities
+#  - convert big tag to its span equivalent with inline styles
 #  - collect any fixed layout metadata for spine page properties
 #  - collect any epub:type attributes to help extend nav
 #  - collect info on svg, mathml, epub:switch, and script usage for manifest properties
@@ -493,6 +494,16 @@ def convert_xhtml(bk, mid, href):
             elif tname == "link":
                 if "charset" in tattr:
                     del tattr["charset"]
+
+            elif tname == "big":
+                tname = "span"
+                if ttype in ["begin"]:
+                    style = tattr.get("style", "")
+                    if style == "":
+                        style = "font-size: larger"
+                    else:
+                        style = style + "; font-size: larger"
+                    tattr["style"] = style
 
             elif tname == "meta":
                 mname = tattr.get("name","")
