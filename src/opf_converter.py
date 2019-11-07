@@ -45,6 +45,7 @@ _epub3_allowed_dctypes = ["dictionary", "index", "distributable-object", "edupub
 _OPF_PARENT_TAGS = ['?xml', 'package', 'metadata', 'dc-metadata', 'x-metadata', 'manifest', 'spine', 'tours', 'guide']
 
 
+# note all href returned by the guide are opf relative hrefs not book hrefs
 class Opf_Converter(object):
 
     def __init__(self, opf2data, spine_properties, manifest_properties, mo_properties, man_ids):
@@ -248,7 +249,7 @@ class Opf_Converter(object):
                 continue
 
             if end_manifest and not "manifest" in prefix:
-                # add in as yet to be created nav document
+                # add in as yet to be created nav document right beside the current opf
                 self.nid = self.valid_id("navid")
                 res.append('<item id="%s" media-type="application/xhtml+xml" href="nav.xhtml" properties="nav" />\n' % self.nid)
                 self.all_ids.append(self.nid)

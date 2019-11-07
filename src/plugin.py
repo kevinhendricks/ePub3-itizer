@@ -117,34 +117,26 @@ def convert_named_entities(text):
     return "".join(pieces)
 
 
-def write_file(data, href, temp_dir, unquote_filename=False, in_oebps=True):
+def write_file(data, bookhref, temp_dir, unquote_filename=False):
     """
-    Write data to temp_dir/OEBPS/href (if in_oebps is True),
-    or to temp_dir/href (if in_oebps), passing href through unquote()
+    Write data to temp_dir/bookref
+    passing bookhref through unquote()
     if unquote_filename is True.
 
     :param data: the data to be written
     :type  data: str
-    :param href: the (internal) path of the file
-    :type  href: str
+    :param bookhref: the (internal) path of the file
+    :type  bookhref: str
     :param temp_dir: the path to the temporary directory
     :type  temp_dir: str
     :param unquote_filename: if True, pass href through unquote()
     :type  unquote_filename: bool
-    :param in_oebps: if True, href is into the subtree rooted at OEBPS/
-    :type  in_oebps: bool
     """
+    filepath = bookhref
     if unquote_filename:
-        destdir = ""
-        filename = unquote(href)
-        if "/" in href:
-            destdir, filename = unquote(filename).split("/")
-        fpath = os.path.join(temp_dir, "OEBPS", destdir, filename)
-    else:
-        if in_oebps:
-            fpath = os.path.join(temp_dir, "OEBPS", href)
-        else:
-            fpath = os.path.join(temp_dir, href)
+        filepath = unquote(filepath)
+    filepath = filepath.replace("/", os.sep)
+    fpath = os.path.join(temp_dir, filepath)
     with open(fpath, "wb") as file_obj:
         file_obj.write(data.encode("utf-8"))
 
@@ -173,8 +165,11 @@ def run(bk):
 
     # parse all xhtml/html files
     for mid, href in bk.text_iter():
+        bookhref = "OEBPS/" + href
+        if bk.launcher_version() >= 20190927:
+            bookhref = bk.id_to_bookpath(mid)
         print("..converting: ", href, " with manifest id: ", mid)
-        data, mprops, sprops, etypes = convert_xhtml(bk, mid, href)
+        data, mprops, sprops, etypes = convert_xhtml(bk, mid, bookhref)
 
         # store away manifest and spine properties and any links 
         # to epub:types for later use in opf3
@@ -186,29 +181,48 @@ def run(bk):
             epub_types[mid] = etypes
 
         # write out modified file
-        write_file(data, href, temp_dir, unquote_filename=True)
+        bookhref = "OEBPS/" + href;
+        if launcher_version() >= 20190927:
+            bookhref = bk.id_to_bookpath(mid)
+        write_file(data, bookhref, temp_dir, unquote_filename=True)
 
     # detect smil files
-    for mid, href, mt in bk.manifest_iter():
-        if mt == "application/smil+xml":
-            print("..patching: ", href, " with manifest id: ", mid)
-            data, text_ids, audio_ids, duration = patch_smil(bk, mid, href)
-            # store mo properties to add
-            # <meta property="media:duration" ...> elements
-            # and media-overlay attributes to opf3
-            # text_ids: list of manifest ids of text files referenced by the smil file
-            # audio_ids: list of manifest ids of audio files referenced by the smil file
-            # duration: float, the duration (in seconds) of the smil file
-            mo_properties[mid] = {
-                "href": href,
-                "text_ids": text_ids,
-                "audio_ids": audio_ids,
-                "duration": duration
-            }
-            # write out modified file
-            write_file(data, href, temp_dir, unquote_filename=True)
 
-    print("..converting: OEBPS/content.opf")
+    # this will be broken in Sigil 1.0 which no longer moves anything
+    # and therefore has no firm locations for anything anymore
+
+    # so we should be updating these inside Sigil itself (I think)
+    # when we do move things.  Not sure really so I will disable this
+    # until I can follow what is exactly being updated and why 
+
+    # for mid, href, mt in bk.manifest_iter():
+    #     if mt == "application/smil+xml":
+    #         bookhref = "OEBPS/" + href
+    #         if bk.launcher_version() >= 20190927:
+    #             bookhref = bk.id_to_bookpath(mid)
+    #         print("..patching: ", bookhref, " with manifest id: ", mid)
+    #         data, text_ids, audio_ids, duration = patch_smil(bk, mid, bookhref)
+    #         # store mo properties to add
+    #         # <meta property="media:duration" ...> elements
+    #         # and media-overlay attributes to opf3
+    #         # text_ids: list of manifest ids of text files referenced by the smil file
+    #         # audio_ids: list of manifest ids of audio files referenced by the smil file
+    #         # duration: float, the duration (in seconds) of the smil file
+    #         mo_properties[mid] = {
+    #             "href": bookhref,
+    #             "text_ids": text_ids,
+    #             "audio_ids": audio_ids,
+    #             "duration": duration
+    #         }
+    #         # write out modified file
+    #         write_file(data, bookhref, temp_dir, unquote_filename=True)
+
+    # now convert the opf
+    opfbookhref = "OEBPS/content.opf"
+    if bk.launcher_version() >= 20190927:
+        opfbookhref = bk.get_opfbookpath()
+
+    print("..converting: ", opfbookhref)
 
     # first create a list of all ids used in the epub2 opf manifest to help
     # prevent id clashes when generating new metadta ids for refines in the new opf
@@ -218,13 +232,12 @@ def run(bk):
 
     # now parse opf2 converting it to opf3 format
     # while merging in previously collected spine and manifest properties
-    opf2 = bk.readotherfile("OEBPS/content.opf")
+    opf2 = bk.readotherfile(opfbookhref)
 
     opfconv = Opf_Converter(opf2, spine_properties, manifest_properties, mo_properties, man_ids)
-    guide_info = opfconv.get_guide()
     lang = opfconv.get_lang()
     opf3 = opfconv.get_opf3()
-    write_file(opf3, "content.opf", temp_dir)
+    guide_info = opfconv.get_guide()
 
     # It is possible that the original EPUB2 <guide> contains references
     # to files not in the spine;
@@ -244,21 +257,46 @@ def run(bk):
                 "', not adding it to the guide landmark in nav.xhtml"
             )
 
+    # now convert all guide hrefs from opf relative to book hrefs
+    new_guide_info = []
+    for gtyp, gtitle, ghref in guide_info_in_spine:
+        gbookhref = "OEBPS/" + href
+        if bk.launcher_version >= 20190927:
+            href, sep, frag = ghref.partition('#')
+            opf_base = bk.get_startingdir(opfbookhref)
+            gbookhref = bk.build_bookpath(href, opf_base) + sep + frag
+        new_guide_info.append((gtyp, gtitle, gbookhref))
+    guide_info_in_spine = new_guide_info
+
+    write_file(opf3, opfbookhref, temp_dir)
+
+
     # need to take info from the old opf2 guide, epub_type semantics info
     # and toc.ncx to create a valid "nav.xhtml"
     # and update it to remove any doctype
-    print("..parsing: OEBPS/toc.ncx")
-    doctitle, toclist, pagelist = parse_ncx(bk, temp_dir)
+    ncxbookhref = "OEBPS/toc.ncx"
+    if bk.launcher_version >= 20190927:
+        ncxid = bk.gettocid()
+        ncxbookhref = bk.id_to_bookpath(ncxid)
+    print("..parsing: ", ncxbookhref)
+    doctitle, toclist, pagelist = parse_ncx(bk, ncxbookhref, temp_dir)
 
     # now build up a nav
-    print("..creating: OEBPS/nav.xhtml")
-    navdata = build_nav(doctitle, toclist, pagelist, guide_info_in_spine, epub_types, lang)
-    write_file(navdata, "nav.xhtml", temp_dir)
+    # place the new nav.xhtml right beside the current opf
+    navbookhref = "OEBPS/nav.xhtml"
+    if bk.launcher_version() >= 20190927:
+        navbookhref = "nav.xhtml"
+        base = bk.get_startingdir(bk.get_opfbookpath))
+        navbookhref = bk.build_bookpath("nav.xhtml", base)
+
+    print("..creating: ", navbookhref)
+    navdata = build_nav(navbookhref, doctitle, toclist, pagelist, guide_info_in_spine, epub_types, lang)
+    write_file(navdata, navbookhref, temp_dir)
 
     # finally ready to build epub
     print("..creating: epub3")
     data = "application/epub+zip"
-    write_file(data, "mimetype", temp_dir, in_oebps=False)
+    write_file(data, "mimetype", temp_dir)
 
     # ask the user where he/she wants to store the new epub
     # TODO use dc:title from the OPF file instead
@@ -307,7 +345,7 @@ def run(bk):
     return 0
  
 
-def patch_smil(bk, mid, href):
+def patch_smil(bk, mid, bookhref):
     """
     Read the given SMIL file, and patches it, setting the suitable
     src attributes for <audio> and <text> elements,
@@ -328,8 +366,8 @@ def patch_smil(bk, mid, href):
     :type  bk: BookContainer
     :param mid: manifest id of the SMIL file
     :type  mid: str
-    :param href: path of the SMIL file
-    :type  href: str
+    :param bookhref: path of the SMIL file
+    :type  bookhref: str
     :rtype: tuple
     """
     text_ids = set()
@@ -470,7 +508,7 @@ def clip_time_string_to_float(string):
 #  - collect any fixed layout metadata for spine page properties
 #  - collect any epub:type attributes to help extend nav
 #  - collect info on svg, mathml, epub:switch, and script usage for manifest properties
-def convert_xhtml(bk, mid, href):
+def convert_xhtml(bk, mid, bookhref):
     res = []
     sproperties = []
     mproperties = []
@@ -535,7 +573,7 @@ def convert_xhtml(bk, mid, href):
                 semantic_type = tattr["epub:type"]
                 id = tattr["id"]
                 title = tattr["title"]
-                etypes.append((href+'#'+id, semantic_type, title))
+                etypes.append((bookhref+'#'+id, semantic_type, title))
 
             res.append(qp.tag_info_to_xml(tname, ttype, tattr))
 
@@ -543,7 +581,8 @@ def convert_xhtml(bk, mid, href):
 
 
 # parse the current toc.ncx to extract toc info, and pagelist info
-def parse_ncx(bk, temp_dir):
+# note all hrefs returned in toclist and pagelist are converted to be book hrefs
+def parse_ncx(bk, ncxbookhref, temp_dir):
     ncx_id = bk.gettocid()
     ncxdata = bk.readfile(ncx_id)
     bk.qp.setContent(ncxdata)
@@ -572,13 +611,23 @@ def parse_ncx(bk, temp_dir):
                 lvl -= 1
             elif tname == "content" and tattr is not None and "src" in tattr and tp.endswith("navpoint"):
                 href =  tattr["src"]
-                toclist.append((lvl, navlabel, href))
+                bookhref = "OEBPS/" + href
+                if bk.launcher_version() >= 20190927:
+                    ahref, asep, afrag = href.partition('#')
+                    base = bk.get_startingdir(ncxbookpath)
+                    bookhref = bk.build_bookpath(ahref, base) + asep + afrag
+                toclist.append((lvl, navlabel, bookhref))
                 navlabel = None
             elif tname == "pagetarget" and ttype == "begin" and tattr is not None:
                 pagenum = tattr.get("value",None)
             elif tname == "content" and tattr is not None and "src" in tattr and tp.endswith("pagetarget"):
                 pageref = tattr["src"]
-                pagelist.append((pagenum, pageref))
+                bookhref = "OEBPS/" + pageref
+                if bk.launcher_version() >= 20190927:
+                    ahref, asep, afrag = pageref.partition('#')
+                    base = bk.get_startingdir(ncxbookpath)
+                    bookhref = bk.build_bookpath(ahref, base) + asep + afrag
+                pagelist.append((pagenum, bookhref))
                 pagenum = None
 
             # remove the ncx doctype as it is no longer allowed in ncx under epub3
@@ -591,15 +640,15 @@ def parse_ncx(bk, temp_dir):
 
     # overwrite modified ncx file
     data = "".join(newncx)
-    filename = "toc.ncx"
-    fpath = os.path.join(temp_dir, "OEBPS", filename)
+    filepath = ncxbookhref.replace("/", os.sep)
+    fpath = os.path.join(temp_dir, filepath)
     with open(fpath, "wb") as f:
         f.write(data.encode('utf-8'))
     return doctitle, toclist, pagelist
 
 
 # build up nave from toclist, pagelist and old opf2 guide info for landmarks
-def build_nav(doctitle, toclist, pagelist, guide_info, epub_types, lang):
+def build_nav(bk, navbookhref, doctitle, toclist, pagelist, guide_info, epub_types, lang):
     navres = []
     ind = '  '
     ibase = ind*3
@@ -624,7 +673,12 @@ def build_nav(doctitle, toclist, pagelist, guide_info, epub_types, lang):
     navres.append(ibase + '<ol>\n')
     curlvl = 1
     initial = True
-    for lvl, lbl, href in toclist:
+    for lvl, lbl, bookhref in toclist:
+        if bk.launcher_version() < 20190927:
+            href = bookhref[6:]
+        else:
+            ahref, asep, afrag = bookhref.partition('#')
+            href = bk.get_relativepath(navbookhref, ahref) + sep + frag
         if lvl > curlvl:
             while lvl > curlvl:
                 indent = ibase + incr*(curlvl)
@@ -661,7 +715,12 @@ def build_nav(doctitle, toclist, pagelist, guide_info, epub_types, lang):
     if len(pagelist) > 0:
         navres.append(ind*2 + '<nav epub:type="page-list" id="page-list" hidden="">\n')
         navres.append(ind*3 + '<ol>\n')
-        for pn, href in pagelist:
+        for pn, bookhref in pagelist:
+            if bk.launcher_version() < 20190927:
+                href = bookhref[6:]
+            else:
+                ahref, asep, afrag = bookhref.partition('#')
+                href = bk.get_relativepath(navbookhref, ahref) + sep + frag
             navres.append(ind*4 + '<li><a href="%s">%s</a></li>\n' % (href, pn))
         navres.append(ind*3 + '</ol>\n')
         navres.append(ind*2 + '</nav>\n')
@@ -671,10 +730,15 @@ def build_nav(doctitle, toclist, pagelist, guide_info, epub_types, lang):
     navres.append(ind*3 + '<h2>Guide</h2>\n')
     navres.append(ind*3 + '<ol>\n')
     for gtyp, gtitle, ghref in guide_info:
+        if bk.launcher_version() < 20190927:
+            href = ghref[6:]
+        else:
+            ahref, asep, afrag = ghref.partition('#')
+            href = bk.get_relativepath(navbookhref, ahref) + sep + frag
         etyp = _guide_epubtype_map.get(gtyp, "")
         if etyp != "":
             navres.append(ind*4 + '<li>\n')
-            navres.append(ind*5 + '<a epub:type="%s" href="%s">%s</a>\n' % (etyp, ghref, gtitle))
+            navres.append(ind*5 + '<a epub:type="%s" href="%s">%s</a>\n' % (etyp, href, gtitle))
             navres.append(ind*4 + '</li>\n')
     navres.append(ind*3 + '</ol>\n')
     navres.append(ind*2 + '</nav>\n')
