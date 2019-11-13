@@ -1,3 +1,10 @@
+v050
+  - major overhaul to get ePub3-itizer to update it to use 
+      the new plugin interface in Sigil 1.0 and 
+      to work with epubs with non-standard layouts
+  - should continue to work with Sigil version before Sigil 1.0
+  - remove support for SMIL updating as Sigil now properly handles that in epub3
+
 v041
   - fix typo that caused bug when creating nav from ncx
   - convert illegal in epub3 big tags to span tags with inline styles 
