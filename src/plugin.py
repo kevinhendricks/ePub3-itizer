@@ -182,7 +182,7 @@ def run(bk):
 
         # write out modified file
         bookhref = "OEBPS/" + href;
-        if launcher_version() >= 20190927:
+        if bk.launcher_version() >= 20190927:
             bookhref = bk.id_to_bookpath(mid)
         write_file(data, bookhref, temp_dir, unquote_filename=True)
 
@@ -261,10 +261,10 @@ def run(bk):
     new_guide_info = []
     for gtyp, gtitle, ghref in guide_info_in_spine:
         gbookhref = "OEBPS/" + href
-        if bk.launcher_version >= 20190927:
-            href, sep, frag = ghref.partition('#')
+        if bk.launcher_version() >= 20190927:
+            ahref, asep, afrag = ghref.partition('#')
             opf_base = bk.get_startingdir(opfbookhref)
-            gbookhref = bk.build_bookpath(href, opf_base) + sep + frag
+            gbookhref = bk.build_bookpath(ahref, opf_base) + asep + afrag
         new_guide_info.append((gtyp, gtitle, gbookhref))
     guide_info_in_spine = new_guide_info
 
@@ -275,7 +275,7 @@ def run(bk):
     # and toc.ncx to create a valid "nav.xhtml"
     # and update it to remove any doctype
     ncxbookhref = "OEBPS/toc.ncx"
-    if bk.launcher_version >= 20190927:
+    if bk.launcher_version() >= 20190927:
         ncxid = bk.gettocid()
         ncxbookhref = bk.id_to_bookpath(ncxid)
     print("..parsing: ", ncxbookhref)
@@ -285,12 +285,13 @@ def run(bk):
     # place the new nav.xhtml right beside the current opf
     navbookhref = "OEBPS/nav.xhtml"
     if bk.launcher_version() >= 20190927:
+        opfbookpath = bk.get_opfbookpath()
         navbookhref = "nav.xhtml"
-        base = bk.get_startingdir(bk.get_opfbookpath))
+        base = bk.get_startingdir(opfbookpath)
         navbookhref = bk.build_bookpath("nav.xhtml", base)
 
     print("..creating: ", navbookhref)
-    navdata = build_nav(navbookhref, doctitle, toclist, pagelist, guide_info_in_spine, epub_types, lang)
+    navdata = build_nav(bk, navbookhref, doctitle, toclist, pagelist, guide_info_in_spine, epub_types, lang)
     write_file(navdata, navbookhref, temp_dir)
 
     # finally ready to build epub
@@ -614,7 +615,7 @@ def parse_ncx(bk, ncxbookhref, temp_dir):
                 bookhref = "OEBPS/" + href
                 if bk.launcher_version() >= 20190927:
                     ahref, asep, afrag = href.partition('#')
-                    base = bk.get_startingdir(ncxbookpath)
+                    base = bk.get_startingdir(ncxbookhref)
                     bookhref = bk.build_bookpath(ahref, base) + asep + afrag
                 toclist.append((lvl, navlabel, bookhref))
                 navlabel = None
@@ -625,7 +626,7 @@ def parse_ncx(bk, ncxbookhref, temp_dir):
                 bookhref = "OEBPS/" + pageref
                 if bk.launcher_version() >= 20190927:
                     ahref, asep, afrag = pageref.partition('#')
-                    base = bk.get_startingdir(ncxbookpath)
+                    base = bk.get_startingdir(ncxbookhref)
                     bookhref = bk.build_bookpath(ahref, base) + asep + afrag
                 pagelist.append((pagenum, bookhref))
                 pagenum = None
@@ -678,7 +679,7 @@ def build_nav(bk, navbookhref, doctitle, toclist, pagelist, guide_info, epub_typ
             href = bookhref[6:]
         else:
             ahref, asep, afrag = bookhref.partition('#')
-            href = bk.get_relativepath(navbookhref, ahref) + sep + frag
+            href = bk.get_relativepath(navbookhref, ahref) + asep + afrag
         if lvl > curlvl:
             while lvl > curlvl:
                 indent = ibase + incr*(curlvl)
@@ -720,7 +721,7 @@ def build_nav(bk, navbookhref, doctitle, toclist, pagelist, guide_info, epub_typ
                 href = bookhref[6:]
             else:
                 ahref, asep, afrag = bookhref.partition('#')
-                href = bk.get_relativepath(navbookhref, ahref) + sep + frag
+                href = bk.get_relativepath(navbookhref, ahref) + asep + afrag
             navres.append(ind*4 + '<li><a href="%s">%s</a></li>\n' % (href, pn))
         navres.append(ind*3 + '</ol>\n')
         navres.append(ind*2 + '</nav>\n')
@@ -734,7 +735,7 @@ def build_nav(bk, navbookhref, doctitle, toclist, pagelist, guide_info, epub_typ
             href = ghref[6:]
         else:
             ahref, asep, afrag = ghref.partition('#')
-            href = bk.get_relativepath(navbookhref, ahref) + sep + frag
+            href = bk.get_relativepath(navbookhref, ahref) + asep + afrag
         etyp = _guide_epubtype_map.get(gtyp, "")
         if etyp != "":
             navres.append(ind*4 + '<li>\n')
