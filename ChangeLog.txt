@@ -1,3 +1,6 @@
+v051
+  - add in missing <title></title> in head of nav
+
 v050
   - major overhaul to get ePub3-itizer to update it to use 
       the new plugin interface in Sigil 1.0 and 

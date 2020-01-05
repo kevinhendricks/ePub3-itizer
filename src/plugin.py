@@ -660,6 +660,7 @@ def build_nav(bk, navbookhref, doctitle, toclist, pagelist, guide_info, epub_typ
     navres.append(' lang="%s" xml:lang="%s">\n' % (lang, lang))
     navres.append(ind + '<head>\n')
     navres.append(ind*2 + '<meta charset="utf-8" />\n')
+    navres.append(ind*2 + '<title></title>\n')
     navres.append(ind*2 + '<style type="text/css">\n')
     # redundant with hidden attributes used later
     # navres.append(ind*2 + 'nav#landmarks, nav#page-list { display:none; }\n')
