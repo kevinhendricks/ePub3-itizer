@@ -69,6 +69,7 @@ class Opf_Converter(object):
         self.nid = None
         self.guide = []
         self.res = []
+        self.has_html_toc = False
         self._convertOpf()
 
 
@@ -291,8 +292,8 @@ class Opf_Converter(object):
 
             if end_spine and not "spine" in prefix:
                 # add in nav document at the end of the spine
-                # leave out linear (defaults to no)
-                res.append('<itemref idref="%s" />\n' % self.nid)
+                # linear will default to "yes"
+                res.append('<itemref idref="%s"NAVLINEARATTRIBUTE/>\n' % self.nid)
                 # close off spine
                 res.append("</spine>\n")
                 end_spine = False
@@ -308,10 +309,12 @@ class Opf_Converter(object):
 
             # store away the guide info to be used with nav
             if tname == "reference" and  prefix.endswith("guide"):
-                type = tattr.get("type",'')
+                gtype = tattr.get("type",'')
+                if gtype == "toc":
+                    self.has_html_toc = True
                 title = tattr.get("title",'')
                 href = tattr.get("href",'')
-                self.guide.append((type, title, href))
+                self.guide.append((gtype, title, href))
                 # allow the guide to pass through to the epub3 opf 
                 guide_res.append(taginfo_toxml((tname, tattr, None)))
                 continue
@@ -599,7 +602,12 @@ class Opf_Converter(object):
         return self.guide
 
     def get_opf3(self):
-        return "".join(self.res)
+        opfdata = "".join(self.res)
+        if self.has_html_toc:
+            opfdata = opfdata.replace('NAVLINEARATTRIBUTE', ' linear="no"')
+        else:
+            opfdata = opfdata.replace('NAVLINEARATTRIBUTE', '')
+        return opfdata
 
     def get_lang(self):
         return self.lang

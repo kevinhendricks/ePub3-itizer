@@ -1,3 +1,7 @@
+v055
+  - make output folder path and file naming smarter
+  - add linear="no" to nav spine entry if html toc entry in guide
+ 
 v051
   - add in missing <title></title> in head of nav
 

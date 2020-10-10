@@ -1,7 +1,7 @@
 **ePub3-itizer** is a python 3.4 or later output plugin for Sigil 
 that will convert a valid epub2 epub into a valid epub3 epub.
 
-Updated: January 5, 2020
+Updated: October 10, 2020
 
 **Very Important Note**
 Support for this plugin is only provided for Sigil 0.9.8 or later. 
@@ -31,6 +31,7 @@ Then it reads the current opf and converts it on the fly to meet package 3 requi
 - extracts the guide for use in creating the nav landmarks and removes it from opf
 - adds an entry in the manifest for the new nav document
 - adds the new nav document to the end of spine
+    and will set it to linear="no" if an HTML TOC exists in the guide
 
 Then it parses the current toc.ncx extracting doctitle, toc, and any pagelist 
 information and removes its DOCTYPE

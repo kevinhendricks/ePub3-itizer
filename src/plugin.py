@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # vim:ts=4:sw=4:softtabstop=4:smarttab:expandtab
 
-# Copyright 2015-2017 Kevin B. Hendricks, Stratford Ontario
+# Copyright 2015-2020 Kevin B. Hendricks, Stratford Ontario
 
 # This plugin's source code is available under the GNU LGPL Version 2.1 or GNU LGPL Version 3 License.
 # See https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html or
@@ -152,6 +152,16 @@ def run(bk):
         print("Error: ePub3-itizer requires a valid epub 2.0 ebook as input")
         return -1
 
+    prefs = bk.getPrefs()
+    prefs.defaults['lastdir'] = _USER_HOME
+    basepath = prefs['lastdir']
+    basename = ""
+    if bk.launcher_version() >= 20180122:
+        filepath = bk.get_epub_filepath()
+        if filepath != "":
+            basepath = os.path.dirname(filepath)
+            basename = os.path.basename(filepath)
+            basename = os.path.splitext(basename)[0] + "_epub3.epub"
     manifest_properties= {}
     spine_properties = {}
     mo_properties = {}
@@ -300,10 +310,10 @@ def run(bk):
     write_file(data, "mimetype", temp_dir)
 
     # ask the user where he/she wants to store the new epub
-    # TODO use dc:title from the OPF file instead
-    if doctitle is None or doctitle == "":
-        doctitle = "filename"
-    fname = cleanup_file_name(doctitle) + "_epub3.epub"
+    if basename == "":
+        if doctitle is None or doctitle == "":
+            doc = "filename"
+        basename = cleanup_file_name(doctitle) + "_epub3.epub"
     localRoot = tkinter.Tk()
     localRoot.withdraw()
  
@@ -325,8 +335,8 @@ def run(bk):
     fpath = tkinter_filedialog.asksaveasfilename(
         parent=localRoot,
         title="Save ePub3 as ...",
-        initialfile=fname,
-        initialdir=_USER_HOME,
+        initialfile=basename,
+        initialdir=basepath,
         defaultextension=".epub"
         )
     # localRoot.destroy()
@@ -338,6 +348,9 @@ def run(bk):
 
     epub_zip_up_book_contents(temp_dir, fpath)
     shutil.rmtree(temp_dir)
+
+    prefs['lastdir'] = os.path.dirname(fpath)
+    bk.savePrefs(prefs)
 
     print("Output Conversion Complete")
     # Setting the proper Return value is important.
