@@ -4,9 +4,8 @@
 <type>output</type>
 <author>KevinH</author>
 <description>Create ePub 3 from valid ePub2 with extensions</description>
-<engine>python2.7</engine>
 <engine>python3.4</engine>
-<version>0.5.5</version>
+<version>0.5.6</version>
 <autostart>true</autostart>
 <oslist>osx,win,unx</oslist>
 </plugin>

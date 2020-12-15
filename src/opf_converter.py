@@ -55,6 +55,8 @@ class Opf_Converter(object):
         self.moprops = mo_properties.copy()
         self.opos = 0
         self.lang = "en"
+        self.uniqueid = None
+        self.uid = ""
         self.title_cnt = 0
         self.creator_cnt = 0
         self.contributor_cnt = 0
@@ -132,9 +134,9 @@ class Opf_Converter(object):
             if tname == "package":
                 tattr["version"] = "3.0"
                 tattr["prefix"] = "rendition: http://www.idpf.org/vocab/rendition/#"
-                uniqueid = tattr.get("unique-identifier", None)
-                if uniqueid is not None:
-                    self.all_ids.append(uniqueid)
+                self.uniqueid = tattr.get("unique-identifier", None)
+                if self.uniqueid:
+                    self.all_ids.append(self.uniqueid)
                 res.append(create_starttag(tname, tattr))
                 end_package = True
                 continue
@@ -177,6 +179,15 @@ class Opf_Converter(object):
             if "metadata" in prefix and tname.startswith("dc:"):
                 if tname == "dc:language":
                     self.lang = tcontent
+                if tname == "dc:identifier":
+                    idval = tattr.get("id","")
+                    if idval != "":
+                        if self.uniqueid and idval == self.uniqueid:
+                            self.uid = tcontent
+                            if "opf:scheme" in tattr:
+                                scheme = tattr["opf:scheme"].lower()
+                                if not self.uid.startswith("urn:"):
+                                    self.uid = "urn:" + scheme + ":" + tcontent
                 updated_tags = self.map_dc(tname, tattr, tcontent)
                 for updated_tag in updated_tags:
                     res.append(taginfo_toxml(updated_tag))
@@ -611,3 +622,6 @@ class Opf_Converter(object):
 
     def get_lang(self):
         return self.lang
+
+    def get_uid(self):
+        return self.uid

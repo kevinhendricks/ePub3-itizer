@@ -1,3 +1,7 @@
+v056
+  - add "ePub Nav" to newly created nav title tag in head
+  - make sure that the NCX uid exactly matches any updated OPF uniqueid values
+
 v055
   - make output folder path and file naming smarter
   - add linear="no" to nav spine entry if html toc entry in guide

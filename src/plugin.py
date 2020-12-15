@@ -246,6 +246,7 @@ def run(bk):
 
     opfconv = Opf_Converter(opf2, spine_properties, manifest_properties, mo_properties, man_ids)
     lang = opfconv.get_lang()
+    uid = opfconv.get_uid()
     opf3 = opfconv.get_opf3()
     guide_info = opfconv.get_guide()
 
@@ -289,7 +290,7 @@ def run(bk):
         ncxid = bk.gettocid()
         ncxbookhref = bk.id_to_bookpath(ncxid)
     print("..parsing: ", ncxbookhref)
-    doctitle, toclist, pagelist = parse_ncx(bk, ncxbookhref, temp_dir)
+    doctitle, toclist, pagelist = parse_ncx(bk, ncxbookhref, temp_dir, uid)
 
     # now build up a nav
     # place the new nav.xhtml right beside the current opf
@@ -527,11 +528,14 @@ def convert_xhtml(bk, mid, bookhref):
     sproperties = []
     mproperties = []
     etypes = []
+    # maintitle = None
     #parse the xhtml, converting on the fly to update it
     qp = bk.qp
     qp.setContent(bk.readfile(mid))
     for text, tprefix, tname, ttype, tattr in qp.parse_iter():
         if text is not None:
+            # if "head" in tprefix and tprefix.endswith("title"):
+            #     maintitle = text
             if "pre" not in tprefix:
                 text = convert_named_entities(text)
             res.append(text)
@@ -572,6 +576,10 @@ def convert_xhtml(bk, mid, bookhref):
                     tattr = {}
                     tattr["charset"] = "utf-8"
 
+            # elif tname == "title" and ttype == "end" and "head" in tprefix:
+            #     if maintitle is None:
+            #         res.append(bookhref)
+
             # handle manifest properties
             elif tname in ["svg", "svg:svg"] and not "svg" in mproperties:
                 mproperties.append("svg")
@@ -596,7 +604,7 @@ def convert_xhtml(bk, mid, bookhref):
 
 # parse the current toc.ncx to extract toc info, and pagelist info
 # note all hrefs returned in toclist and pagelist are converted to be book hrefs
-def parse_ncx(bk, ncxbookhref, temp_dir):
+def parse_ncx(bk, ncxbookhref, temp_dir, uid):
     ncx_id = bk.gettocid()
     ncxdata = bk.readfile(ncx_id)
     bk.qp.setContent(ncxdata)
@@ -619,6 +627,9 @@ def parse_ncx(bk, ncxbookhref, temp_dir):
             skip_if_newline = False
             newncx.append(txt)
         else:
+            if tname == "meta" and ttype == "single":
+                if tattr.get("name","") == "dtb:uid":
+                    tattr["content"] = uid
             if tname == "navpoint" and ttype == "begin":
                 lvl += 1
             elif tname == "navpoint" and ttype == "end":
@@ -673,7 +684,7 @@ def build_nav(bk, navbookhref, doctitle, toclist, pagelist, guide_info, epub_typ
     navres.append(' lang="%s" xml:lang="%s">\n' % (lang, lang))
     navres.append(ind + '<head>\n')
     navres.append(ind*2 + '<meta charset="utf-8" />\n')
-    navres.append(ind*2 + '<title></title>\n')
+    navres.append(ind*2 + '<title>ePub Nav</title>\n')
     navres.append(ind*2 + '<style type="text/css">\n')
     # redundant with hidden attributes used later
     # navres.append(ind*2 + 'nav#landmarks, nav#page-list { display:none; }\n')
