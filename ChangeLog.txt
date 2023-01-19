@@ -1,3 +1,7 @@
+v058
+  - remove xml base entities for > < and & from the named entity conversion
+  - allow text even inside of pre tags to have named entities converted
+
 v056
   - add "ePub Nav" to newly created nav title tag in head
   - make sure that the NCX uid exactly matches any updated OPF uniqueid values

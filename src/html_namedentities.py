@@ -1,10 +1,10 @@
 from __future__ import absolute_import, division, unicode_literals
 
+# do not convert basic xml entities as they are properly recognized in epub3
+
 named_entities = {
     "AElig": "\xc6",
     "AElig;": "\xc6",
-    "AMP": "&",
-    "AMP;": "&",
     "Aacute": "\xc1",
     "Aacute;": "\xc1",
     "Abreve;": "\u0102",
@@ -169,8 +169,6 @@ named_entities = {
     "Fouriertrf;": "\u2131",
     "Fscr;": "\u2131",
     "GJcy;": "\u0403",
-    "GT": ">",
-    "GT;": ">",
     "Gamma;": "\u0393",
     "Gammad;": "\u03dc",
     "Gbreve;": "\u011e",
@@ -247,8 +245,6 @@ named_entities = {
     "Kopf;": "\U0001d542",
     "Kscr;": "\U0001d4a6",
     "LJcy;": "\u0409",
-    "LT": "<",
-    "LT;": "<",
     "Lacute;": "\u0139",
     "Lambda;": "\u039b",
     "Lang;": "\u27ea",
@@ -657,8 +653,6 @@ named_entities = {
     "alpha;": "\u03b1",
     "amacr;": "\u0101",
     "amalg;": "\u2a3f",
-    "amp": "&",
-    "amp;": "&",
     "and;": "\u2227",
     "andand;": "\u2a55",
     "andd;": "\u2a5c",
@@ -1135,8 +1129,6 @@ named_entities = {
     "gsim;": "\u2273",
     "gsime;": "\u2a8e",
     "gsiml;": "\u2a90",
-    "gt": ">",
-    "gt;": ">",
     "gtcc;": "\u2aa7",
     "gtcir;": "\u2a7a",
     "gtdot;": "\u22d7",
@@ -1390,8 +1382,6 @@ named_entities = {
     "lsquo;": "\u2018",
     "lsquor;": "\u201a",
     "lstrok;": "\u0142",
-    "lt": "<",
-    "lt;": "<",
     "ltcc;": "\u2aa6",
     "ltcir;": "\u2a79",
     "ltdot;": "\u22d6",

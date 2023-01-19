@@ -536,8 +536,8 @@ def convert_xhtml(bk, mid, bookhref):
         if text is not None:
             # if "head" in tprefix and tprefix.endswith("title"):
             #     maintitle = text
-            if "pre" not in tprefix:
-                text = convert_named_entities(text)
+            # if "pre" not in tprefix:
+            text = convert_named_entities(text)
             res.append(text)
         else:
             # remap doctype
