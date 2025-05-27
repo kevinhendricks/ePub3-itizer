@@ -1,3 +1,7 @@
+v060
+ - remove the tk gui and replace it with a Qt PySide6 based one
+   (minimum Sigil version is now Sigil 2.0.0)
+ 
 v058
   - remove xml base entities for > < and & from the named entity conversion
   - allow text even inside of pre tags to have named entities converted

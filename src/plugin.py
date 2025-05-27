@@ -23,19 +23,7 @@ except ImportError:
 from opf_converter import Opf_Converter
 from html_namedentities import named_entities
 from epub_utils import epub_zip_up_book_contents
-
-PY2 = sys.version_info[0] == 2
-
-if PY2:
-    import Tkinter as tkinter
-    import ttk as tkinter_ttk
-    import Tkconstants as tkinter_constants
-    import tkFileDialog as tkinter_filedialog
-else:
-    import tkinter
-    import tkinter.ttk as tkinter_ttk
-    import tkinter.constants as tkinter_constants
-    import tkinter.filedialog as tkinter_filedialog
+from plugin_utils import QtWidgets
 
 _guide_epubtype_map = {
      'acknowledgements'   : 'acknowledgments',
@@ -97,7 +85,7 @@ _ncx_tagname_map = {
 
 _USER_HOME = os.path.expanduser("~")
 
-IS_NAMED_ENTITY = re.compile("(&\w+;)")
+IS_NAMED_ENTITY = re.compile(r"(&\w+;)")
 
 NAMESPACE_MAP = {
     "smil": "http://www.w3.org/ns/SMIL",
@@ -151,7 +139,11 @@ def run(bk):
     if epubversion.startswith("3"):
         print("Error: ePub3-itizer requires a valid epub 2.0 ebook as input")
         return -1
-
+    
+    if bk.launcher_version() < 20230315:
+        print("This plugin requires Sigil-2.0.0 or later")
+        return -1
+    
     prefs = bk.getPrefs()
     prefs.defaults['lastdir'] = _USER_HOME
     basepath = prefs['lastdir']
@@ -315,33 +307,14 @@ def run(bk):
         if doctitle is None or doctitle == "":
             doc = "filename"
         basename = cleanup_file_name(doctitle) + "_epub3.epub"
-    localRoot = tkinter.Tk()
-    localRoot.withdraw()
- 
-    if sys.platform.startswith('darwin'):
-        # localRoot is is an empty topmost root window that is hidden by withdrawing it
-        # but localRoot needs to be centred, and lifted and focus_force used
-        # so that its child dialog will inherit focus upon launch
-        localRoot.overrideredirect(True)
-        # center on screen but make size 0 to hide the empty localRoot
-        w = localRoot.winfo_screenwidth()
-        h = localRoot.winfo_screenheight()
-        x = int(w/2)
-        y = int(h/2)
-        localRoot.geometry('%dx%d+%d+%d' % (0, 0, x, y))
-        localRoot.deiconify()
-        localRoot.lift()
-        localRoot.focus_force()
 
-    fpath = tkinter_filedialog.asksaveasfilename(
-        parent=localRoot,
-        title="Save ePub3 as ...",
-        initialfile=basename,
-        initialdir=basepath,
-        defaultextension=".epub"
-        )
-    # localRoot.destroy()
-    localRoot.quit()
+    suggest = basepath + '/' + basename
+
+    # ask for name and location to save
+    app = QtWidgets.QApplication(sys.argv)
+    fpath, seleted_filter = QtWidgets.QFileDialog.getSaveFileName(None, 'Save ePub3 as ...', suggest, "ePubs (*.epub)")
+    app.quit()
+
     if not fpath:
         shutil.rmtree(temp_dir)
         print("ePub3-itizer plugin cancelled by user")
