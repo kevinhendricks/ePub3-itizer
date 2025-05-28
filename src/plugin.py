@@ -23,7 +23,7 @@ except ImportError:
 from opf_converter import Opf_Converter
 from html_namedentities import named_entities
 from epub_utils import epub_zip_up_book_contents
-from plugin_utils_light import QtWidgets
+from PySide6 import QtWidgets
 
 _guide_epubtype_map = {
      'acknowledgements'   : 'acknowledgments',
