@@ -351,6 +351,15 @@ class Opf_Converter(object):
             guide_res = []
             end_guide = False
 
+        # when the spine is the last section (there is no guide section)
+        if end_spine:
+            # add in nav document at the end of the spine
+            # linear will default to "yes"
+            res.append('<itemref idref="%s"NAVLINEARATTRIBUTE/>\n' % self.nid)
+            # close off spine
+            res.append("</spine>\n")
+            end_spine = False
+
         if end_package:
             res.append("</package>\n")
             end_package = False
